@@ -1,0 +1,75 @@
+/*main media listeners*/
+@media (max-width: 992px) {
+    #side-nav {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+        transform: translate(-576px,0);
+    }
+    #nav-overlay.active {
+        display: block;
+    }
+    #content {
+        margin-left: 0px;
+    }
+    #top-nav {
+        width: 100%;
+        left: 0;
+    }
+    #top-nav .user-indicator .name {
+        display: none;
+    }
+    #top-nav .user-indicator .icon {
+        display: none;
+    }
+    #top-nav .page-nav-meta {
+        position: absolute;
+        left: 50%;
+        top: 46%;
+        transform: translate(-50%,-50%);
+    }
+    .nav-icon {
+        display: block;
+    }
+}
+@media (max-width: 768px) {
+    
+}
+@media (min-width: 768px) {
+    .pr-md-1 {padding-right: .25rem!important;}
+    .pl-md-1 {padding-left: .25rem!important;}
+}
+@media (max-width: 576px) {
+    #side-nav {
+        width: 80%;
+    }
+    .bg-white-sm {background: white;}
+    .hms-card.full-form-sm {
+        border-radius: 0px;
+        margin-left: -15px;
+        margin-right: -15px;
+        padding: 20px;
+    }
+    .table-ore {
+        margin-right: 3px;
+        top: -2px;
+    }
+    .card-piers .pier-item {
+        width: calc(20% + 1px);
+    }
+    .hms-card.pier-card-responsive {
+        background: none;
+        padding: 0px;
+    }
+    .mt-sm-30 {margin-top: 30px;}
+    .sm-margin-minus-15 {
+        margin-left: -15px;
+        margin-right: -15px;
+    }
+    .sm-border-radius-0 {
+        border-radius: 0;
+    }
+}
