@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Helpers\BaseHelper;
+// use App\Helpers\BaseHelper;
 use Carbon\Carbon;
 
 use BaseApi, View;
@@ -16,40 +16,40 @@ class EmployeeController extends Controller
     public function index(Request $req){
         $api = new BaseApi();
 
-        $params = array();
+        if($req->ajax()) {
+            $params = array();
+            $query  = array();
 
-        if ($req->input('name')) {
-            $params['name'] = $req->input('name');
-        }
+            if ($req->name) {
+                $params['name'] = $req->name;
+            }
 
-        if ($req->input('page')) {
-            $params['offset'] = $req->input('page') - 1;
-            $params['page'] = $req->input('page');
-        } else {
-            $params['offset'] = $this->offset;
-            $params['page'] = $this->offset + 1;
-        }
+            if (isset($_GET['page'])) {
+                $query['page']  = $_GET['page'];
+            }
 
-        $params['limit'] = $this->limit;
+            $response = $api->post('employee/list', [
+                'form_params' => $params,
+                'query'       => $query
+            ]);
+    
+            $return         = json_decode($response->getBody())->data;
+            $data           = $return->list;
+            $current_page   = $data->current_page;
+            $last_page      = $data->last_page;
+            $total          = $data->total;
+            return view($this->view . 'table', )->with(compact('data', 'current_page', 'last_page', 'total'));
+        };
 
-        if ($req->input('offset')) {
-            $params['offset'] = $req->input('offset');
-        }
-
-        $response = $api->post('employee/list', [
-            'form_params' => $params
+        $resEmp = $api->post('employee/list', [
+            'form_params' => []
         ]);
 
-        $employees      = json_decode($response->getBody())->data;
-        $pagination     = BaseHelper::pagination(($employees->offset + 1), $employees->total_page);
-        $pages          = $pagination;
-        $params         = $params;
-        $page_number    = $employees->total_page;
-        $page_item      = $employees->total_number;
+        $employees  = json_decode($resEmp->getBody())->data;
 
         View::share('title', 'Employee Database');
 
-        return view($this->view . 'index', compact('employees', 'pages', 'page_number', 'page_item', 'params'));
+        return view($this->view . 'index', compact('employees'));
     }
 
     public function create() {

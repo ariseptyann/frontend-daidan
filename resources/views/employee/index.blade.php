@@ -26,55 +26,14 @@
             </a>
         </div>
         <div class="info">
-            <!-- <em>Showing 25 out items</em> -->
-            <em>Showing 25 out of 240 filtered items - <a href="{{route('employee.index')}}">Remove Filter</a></em>
+            <a href="{{route('employee.index')}}">Remove Filter</a>
         </div>
-        <div class="table-wrapper no-scrollbar">
-            <table class="table hoverable">
-                <thead>
-                    <tr>
-                        <th class="sgx-w-100">Name</th>
-                        <th class="sgx-w-50">Status</th>
-                        <th class="sgx-w-50">NIK</th>
-                        <th class="sgx-w-50">Joined</th>
-                        <th class="sgx-w-50">Srv Year</th>
-                        <th class="sgx-w-50">Company</th>
-                        <th class="sgx-w-100">Department</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($employees->list as $item)
-                        <tr>
-                            <td>
-                                <div class="one-line text-nowrap d-block" style="cursor: pointer">
-                                    <img src="{{ asset('img/initials/1_a.png') }}" class="thumb s15 round">
-                                    <a data-href="{{route('employee.show', $item->id)}}" data-id="{{$item->id}}" id="detailEmployee" style="color: #007bff">{{$item->name}}</a>
-                                </div>
-                            </td>
-                            @if ($item->status == 'active')
-                                <td class="text-center bg-light-blue">{{strtoupper($item->status)}}</td>
-                            @else
-                            <td class="text-center bg-light-red">{{strtoupper($item->status)}}</td>
-                            @endif
-                            <td>{{$item->nik}}</td>
-                            <td>{{$item->join_date}}</td>
-                            <td>
-                                @php
-                                    $time = \Carbon\Carbon::now()->diff($item->join_date);
-                                @endphp
-                                <img class="inline-icon" src="{{ asset('icons/clock-dark.svg ') }}"> {{ $time->y . 'y ' . $time->m . 'm'}}
-                            </td>
-                            <td>{{$item->company->name}}</td>
-                            <td>{{$item->departement->name}}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+        <div class="table-wrapper no-scrollbar" id="dataTable">
+            
         </div>
-        <div class="paginates text-right">
+        {{-- <div class="paginates text-right">
             <a href="#">Previous</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="#">Next</a>
-        </div>
+        </div> --}}
     </div>
 
     {{-- ================ Modals ================ --}}
@@ -106,16 +65,14 @@
                     Employee Database Search
                 </div>
                 <div class="modal-body">
-                    <form action="arrivals.php">
-                        <div class="form-group">
-                            <label>Name</label>
-                            <input type="text" class="form-control hms-control hms-small first-focus">
-                        </div>
-                    </form>
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" name="name" class="form-control hms-control hms-small first-focus">
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn hms-btn btn-light" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn hms-btn btn-sea add-spinner white-spinner">Apply</button>
+                    <button type="button" class="btn hms-btn btn-sea" id="applySearch">Apply</button>
                 </div>
             </div>
         </div>
@@ -142,13 +99,117 @@
 
     @section('script')
         <script type="text/javascript">
-            $('.page-item').click(function() {
-                $('#filter-offset').val($(this).data('offset'));
-                var off = $(this).data('offset');
-
-                submitData(true);
+            $(document).on('click', '.paginate', function(e){
+                e.preventDefault();
+                var searchParams = new URLSearchParams(window.location.search);
+                searchParams.set(`page`, '1');
+                var newUrl = '?'+searchParams.toString();
+                window.history.pushState({}, '', newUrl);
+                let page = $(this).data('page');
+                let queryString = `page`;
+                getQueryString(queryString, page);
             });
 
+            $(document).ready(function () {
+                getData();
+            });
+
+            // Search
+            $(document).on('click', '#applySearch', function(e){
+                e.preventDefault();
+                var searchParams = new URLSearchParams(window.location.search);
+                searchParams.set(`page`, '1');
+                var newUrl = '?'+searchParams.toString();
+                window.history.pushState({}, '', newUrl);
+
+                let name = $('input[name=name]').val();
+                let queryString = `name`;
+                getQueryString(queryString, name);
+                $("#search-tray").modal('hide');
+            });
+
+            function getQueryString(queryString = '', value = '')
+            {
+                let currentUrl = window.location.href;
+                if(currentUrl.indexOf("?page=") > -1)
+                {
+                    if(currentUrl.indexOf(queryString) > -1)
+                    {
+                        var parameters = new URLSearchParams(window.location.search);
+                        let val = parameters.get(queryString) //1
+                        if(value === '')
+                        {
+                            var searchParams = new URLSearchParams(window.location.search);
+                            var newUrl = removeParam(queryString, currentUrl);
+                            window.history.pushState({}, '', newUrl);
+                            getData(newUrl);
+                        }else {
+                            if(val !== value)
+                            {
+                                var searchParams = new URLSearchParams(window.location.search);
+                                searchParams.set(queryString, value);
+                                var newUrl = '?'+searchParams.toString();
+                                window.history.pushState({}, '', newUrl)
+                                getData(newUrl);
+                            }
+                        }
+                    }else {
+                        let newUrl = currentUrl+'&'+queryString+'='+value;
+                        window.history.pushState({}, '', newUrl);
+                        getData(newUrl);
+                    }
+                }else {
+                    let newUrl = currentUrl+'?page=1&'+queryString+'='+value;
+                    window.history.pushState({}, '', newUrl);
+                    getData(newUrl);
+                }
+            }
+
+            function removeParam(key, sourceURL) {
+                var rtn = sourceURL.split("?")[0],
+                    param,
+                    params_arr = [],
+                    queryString = (sourceURL.indexOf("?") !== -1) ? sourceURL.split("?")[1] : "";
+                if (queryString !== "") {
+                    params_arr = queryString.split("&");
+                    for (var i = params_arr.length - 1; i >= 0; i -= 1) {
+                        param = params_arr[i].split("=")[0];
+                        if (param === key) {
+                            params_arr.splice(i, 1);
+                        }
+                    }
+                    if (params_arr.length) rtn = rtn + "?" + params_arr.join("&");
+                }
+                return rtn;
+            }
+
+            function getData(url = ''){
+                if(url.indexOf("?page=1") > -1){
+                    $.ajax({
+                        url: url,
+                        method: "GET",
+                        cache: false,
+                        success: function(data)
+                        {
+                            $('#dataTable').html(data);
+                        }
+                    });
+                }else {
+                    let currentUrl = window.location.href;
+                    $.ajax({
+                        url: currentUrl,
+                        method: "GET",
+                        cache: false,
+                        success: function(data)
+                        {
+                            $('#dataTable').html(data);
+                        }
+                    });
+                }
+
+            }
+
+            // ========== Detail Employee Modal ==========
             $(document).on('click', '#detailEmployee', function(e){
                 e.preventDefault();
                 let url = $(this).attr('data-href');
